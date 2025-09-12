@@ -305,17 +305,19 @@ export function CPlayer() {
         return mCurrentCol / mSong.numChannels;
     };
 
+    // ALTERED START HERE to reduce space: 
     // Create a AudioBuffer from the generated audio data
-    this.createAudioBuffer = function(context) {
-        var buffer = context.createBuffer(2, mNumWords / 2, 44100);
-        for (var i = 0; i < 2; i ++) {
-            var data = buffer.getChannelData(i);
-            for (var j = i; j < mNumWords; j += 2) {
-                data[j >> 1] = mMixBuf[j] / 65536;
-            }
-        }
-        return buffer;
-    };
+    // this.createAudioBuffer = function(context) {
+    //     var buffer = context.createBuffer(2, mNumWords / 2, 44100);
+    //     for (var i = 0; i < 2; i ++) {
+    //         var data = buffer.getChannelData(i);
+    //         for (var j = i; j < mNumWords; j += 2) {
+    //             data[j >> 1] = mMixBuf[j] / 65536;
+    //         }
+    //     }
+    //     return buffer;
+    // };
+    // ALTERED END HERE
     
     // Create a WAVE formatted Uint8Array from the generated audio data
     this.createWave = function() {
@@ -345,16 +347,18 @@ export function CPlayer() {
         return wave;
     };
 
+    // ALTERED START HERE to reduce space: 
     // Get n samples of wave data at time t [s]. Wave data in range [-2,2].
-    this.getData = function(t, n) {
-        var i = 2 * Math.floor(t * 44100);
-        var d = new Array(n);
-        for (var j = 0; j < 2*n; j += 1) {
-            var k = i + j;
-            d[j] = t > 0 && k < mMixBuf.length ? mMixBuf[k] / 32768 : 0;
-        }
-        return d;
-    };
+    // this.getData = function(t, n) {
+    //     var i = 2 * Math.floor(t * 44100);
+    //     var d = new Array(n);
+    //     for (var j = 0; j < 2*n; j += 1) {
+    //         var k = i + j;
+    //         d[j] = t > 0 && k < mMixBuf.length ? mMixBuf[k] / 32768 : 0;
+    //     }
+    //     return d;
+    // };
+    // ALTERED END HERE
 };
 
 

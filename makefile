@@ -1,4 +1,4 @@
-version := 1.0.4
+version := 1.1.1
 FILE_NAME=bcat_survivor
 
 CHECK_FILE_SIZE= (\

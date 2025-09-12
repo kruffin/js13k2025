@@ -1,5 +1,21 @@
+/*
+  Copyright (c) 2025 Kevin Ruffin
+  Copyright (c) 2015 Steven Lambert in sections marked.
+
+  This program is free software: you can redistribute it and/or modify it under 
+  the terms of the GNU Affero General Public License as published by the Free 
+  Software Foundation, either version 3 of the License, or (at your option) any 
+  later version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+  PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License along 
+  with this program. If not, see <https://www.gnu.org/licenses/>. 
+*/
 import {CPlayer} from './player-small.js';
-import {Blob} from './Blob.js';
+import {Blobb as Blob} from './Blob.js';
 
 let canvas = document.getElementById("game");
 let context = canvas.getContext('2d');
@@ -92,42 +108,52 @@ const cloneAnimations = function(anim_obj) {
 	}
 	return anims;
 };
+const getColorKey = function(r, g, b, noCell) {
+  // Jack-ass advertisers ruining the world yet again:
+  // https://www.h3xed.com/programming/javascript-canvas-getimagedata-pixel-colors-slightly-off-in-firefox
+  // Since pixels are randomly jittered by a little bit, just box things in cells of 10 so 
+  // the jitter is effectively ignored. Lose some resolution, but should work for the government.
+  const COLOR_CELL_SIZE = noCell ? 1 : 10;
+  return parseInt(Math.floor(r/COLOR_CELL_SIZE)*COLOR_CELL_SIZE).toString(16).padStart(2, '0') +
+         parseInt(Math.floor(g/COLOR_CELL_SIZE)*COLOR_CELL_SIZE).toString(16).padStart(2, '0') +
+         parseInt(Math.floor(b/COLOR_CELL_SIZE)*COLOR_CELL_SIZE).toString(16).padStart(2, '0');
+};
+const parseColorKey = function(key) {
+  let rgb = key.match(/([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/);
+  return [
+    parseInt(rgb[1], 16),
+    parseInt(rgb[2], 16),
+    parseInt(rgb[3], 16)
+  ];
+};
 const recolorImage = function(inimg, palette) {
-	var ocanvas = new OffscreenCanvas(inimg.width, inimg.height);
-
+  var ocanvas = new OffscreenCanvas(inimg.width, inimg.height);
   let ctx = ocanvas.getContext('2d');
+  // ctx.imageSmoothingEnabled = false;
   ctx.drawImage(inimg, 0, 0);
   let pixdata = ctx.getImageData(0, 0, inimg.width, inimg.height);
 
-  // let curpalette = {};
   for (let pidx = 0; pidx < pixdata.data.length; pidx += 4) {
-  	// let color = {
-  	// 	r: pixdata.data[pidx],
-  	// 	g: pixdata.data[pidx + 1],
-  	// 	b: pixdata.data[pidx + 2],
-  	// 	a: pixdata.data[pidx + 3],
-  	// };
+    let key = getColorKey(pixdata.data[pidx], pixdata.data[pidx+1], pixdata.data[pidx+2]);
 
-  	let key = '' + 	pixdata.data[pidx] + '|' +
-  									pixdata.data[pidx+1] + '|' +
-  									pixdata.data[pidx+2];
-  	// curpalette[key] = true;
-
-  	if (Object.keys(palette).includes(key)) {
-  		let rgb = palette[key].match(/(\d+)[|](\d+)[|](\d+)/);
-  		pixdata.data[pidx] = rgb[1];//palette[key].r;
-  		pixdata.data[pidx + 1] = rgb[2];//palette[key].g;
-  		pixdata.data[pidx + 2] = rgb[3];//palette[key].b;
-  	}
+    if (Object.keys(palette).includes(key)) {
+      // let rgb = palette[key].match(/([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/);
+      // pixdata.data[pidx    ] = parseInt(rgb[1], 16);
+      // pixdata.data[pidx + 1] = parseInt(rgb[2], 16);
+      // pixdata.data[pidx + 2] = parseInt(rgb[3], 16);
+      let rgb = parseColorKey(palette[key]);
+      pixdata.data[pidx    ] = rgb[0];
+      pixdata.data[pidx + 1] = rgb[1];
+      pixdata.data[pidx + 2] = rgb[2];
+    }
   }
 
-  // console.log(Object.keys(curpalette));
   ctx.putImageData(pixdata, 0, 0);
 
   let oimg = ocanvas.transferToImageBitmap();
 
   return oimg;
-}
+};
 
 const _getClosestTargetInRange = function (toignore) {
 	switch(this.targetType) {
@@ -742,6 +768,51 @@ let _sounds = {
     // endPattern: 0,  // End pattern
     // numChannels: 1  // Number of channels
   }),
+  'gwin': createAudio({
+    songData: [
+      { // Instrument 0
+        i: [
+        3, // OSC1_WAVEFORM
+        100, // OSC1_VOL
+        128, // OSC1_SEMI
+        0, // OSC1_XENV
+        3, // OSC2_WAVEFORM
+        201, // OSC2_VOL
+        128, // OSC2_SEMI
+        2, // OSC2_DETUNE
+        0, // OSC2_XENV
+        0, // NOISE_VOL
+        0, // ENV_ATTACK
+        6, // ENV_SUSTAIN
+        49, // ENV_RELEASE
+        0, // ENV_EXP_DECAY
+        0, // ARP_CHORD
+        0, // ARP_SPEED
+        0, // LFO_WAVEFORM
+        139, // LFO_AMT
+        4, // LFO_FREQ
+        1, // LFO_FX_FREQ
+        3, // FX_FILTER
+        30, // FX_FREQ
+        184, // FX_RESONANCE
+        119, // FX_DIST
+        244, // FX_DRIVE
+        147, // FX_PAN_AMT
+        6, // FX_PAN_FREQ
+        84, // FX_DELAY_AMT
+        6 // FX_DELAY_TIME
+        ],
+        // Patterns
+        p: [1],
+        // Columns
+        c: [
+          {n: [156,,154,,156,,158],
+           f: []}
+        ]
+      },
+    ],
+    patternLen: 8,
+  }),
 };
 let _items = null;//{
 	// 'pew': {}, // Populated on load
@@ -815,9 +886,9 @@ const populateItems = function() {
 					{ method: 'updateFlames', args: []},
 					{ method: 'fire', args: []},
 					{ method: 'addFlame', args: []},
-					{ method: 'changeState', args: ['reload']},
+					{ method: 'changeState', args: ['reloadg']},
 				],
-				'reload': [
+				'reloadg': [
 					{ method: 'updateFlames', args: []},
 					{ method: 'reload', args: []},
 					{ method: 'changeState', args: ['spawnFlames']},
@@ -827,7 +898,7 @@ const populateItems = function() {
 				// 	{ method: 'changeState', args: ['spawnFlames']},
 				// ],
 			},
-			aiState: 'reload',
+			aiState: 'reloadg',
 			addFlame: function(f) {
 				this.addChild(f);
 				// if (this.objects.length >= this.maxFlames) {
@@ -842,7 +913,7 @@ const populateItems = function() {
 				for (let fidx = 0; fidx < this.objects?.length | 0; fidx++) {
 					let f = this.objects[fidx];
 					f.speed = this.bulletSpeed + (1 - 1/this.level)*this.bulletSpeed;
-					f.damage = this.damage * this.level;
+					f.damage = this.damage * (1 + this.level);//this.damage * this.level;
 					const MAX_IN_RING = 3;
 					let layer = Math.floor(fidx / MAX_IN_RING);
 					let leftover = fidx - layer*MAX_IN_RING; // keep max of 3
@@ -884,7 +955,11 @@ const populateItems = function() {
 				if (!this.attractionRange) {
 					this.attractionRange = this.parent?.attractionRange;
 				}
+        if (!this.attractionSpeed) {
+          this.attractionSpeed = this.parent?.attractspeed;
+        }
 				this.parent.attractionRange = this.attractionRange * (1 + this.level);
+        this.parent.attractspeed = this.attractionSpeed + (40 * this.level);
 			},
 		}},
 		'hiheel': function () {return {
@@ -1736,7 +1811,7 @@ class Pickup extends MySprite {
     super(Object.assign({
     	shinedx: 0,
     	shinetime: 5,
-    	attractspeed: 40,
+    	// attractspeed: 40,
 		}, properties));
   }
 
@@ -1746,8 +1821,9 @@ class Pickup extends MySprite {
   	if (pdist <= _player.attractionRange) {
   		// Move toward player
   		let d = dir(this.world, _player.world);
-  		this.dx = d.x * (this.attractspeed / 2 + (1 - pdist / _player.attractionRange) * this.attractspeed / 2);
-  		this.dy = d.y * (this.attractspeed / 2 + (1 - pdist / _player.attractionRange) * this.attractspeed / 2);
+      let speed = (_player.attractionSpeed / 2 + (1 - pdist / _player.attractionRange) * _player.attractionSpeed * .75);
+  		this.dx = d.x * speed;
+  		this.dy = d.y * speed;
   	} else {
   		this.dx = 0;
   		this.dy = 0;
@@ -2114,6 +2190,7 @@ const createPlayer = function() {
 		maxHealth: 10,
 		speed: 20,
 		attractionRange: 10,
+    attractionSpeed: 40,
 		x: 0,
 		y: 0,
 		width: 4,
@@ -2209,6 +2286,9 @@ const createPlayer = function() {
 					this.dy = 0.0;
 				}
 			}
+      if (this.dx != 0) {
+        this.flipx = (this.dx < 0);
+      }
 
 			this.advance(step);
 
@@ -2738,7 +2818,7 @@ const startGame = function() {
 		audio: aplayer,
 		speedCheck: 0,
 		maxAudioSpeed: 5,
-
+    _oldk: {},
 		update: function(step) {
 			if (_player.curHealth <= 0) {
 				this.audio.pause();
@@ -2748,9 +2828,18 @@ const startGame = function() {
 			}
 			if (_win) {
 				this.audio.pause();
+        !this._playedgover && _sounds['gwin'].play() && (this._playedgover = true);
 				this.updateGameOver(step);
 				return;
 			}
+      // Music pausing
+      let m = keyPressed('KeyM');
+      if (this._oldk['m'] && !m) {
+        this.audio.paused ? this.audio.play() : this.audio.pause();
+      }
+      this._oldk['m'] = m;
+      // End music pausing
+
 			_gametime += step;
 			_map.update(step);
 			_ui.update(step);
@@ -2765,10 +2854,10 @@ const startGame = function() {
 		},
 		updateGameOver: function(step) {
 			let p = keyPressed('Space');
-			if (this._oldp && !p) {
+			if (this._oldk['p'] && !p) {
 				this.reset();
 			}
-			this._oldp = p;
+			this._oldk['p'] = p;
 			this.titleColor = 'black';
 		},
 		reset: function() {
@@ -2826,46 +2915,22 @@ load('./assets/characters.png').then( () => {
 		{/*walk: [0,],*/ idle: [0,], img: _imageCache['./assets/characters.png'] }, // 0 - Player
 		{/*walk: [1,],*/ idle: [1,], img: _imageCache['./assets/characters.png'] }, // 1 - Black Cat
 		{/*walk: [1,],*/ idle: [1,], img: recolorImage(_imageCache['./assets/characters.png'], {
-				// '21|21|21': {r:61,g:24,b:24},//{r: 59, g: 13, b: 13},
-				// '23|23|23': {r:59,g:23,b:23},
-				// '25|25|25': {r:56,g:22,b:22},//{r: 59, g: 13, b: 13},
-				// '28|28|28': {r:51,g:20,b:20},
-				// '29|29|29': {r:51,g:20,b:20},
-				// '30|30|30': {r:56,g:22,b:22},
-				// '34|32|32': {r:56,g:39,b:22},
-				// '32|32|32': {r:56,g:39,b:22},
-				// '33|33|33': {r:54,g:21,b:21},
-				// '37|37|37': {r:56,g:39,b:22},
-				// '39|39|39': {r:56,g:39,b:22},
-				// '40|40|40': {r:56,g:39,b:22},
-				// '41|41|41': {r:56,g:39,b:22},
-				// '42|42|42': {r:56,g:39,b:22},
-				// '43|43|43': {r:56,g:39,b:22},
-				// '48|48|48': {r:56,g:39,b:22},
-				// '54|54|54': {r:56,g:39,b:22},
-				// '56|56|56': {r:56,g:39,b:22},
-				// '68|68|68': {r:56,g:39,b:22},
-				// '69|69|69': {r:56,g:39,b:22},
-				'21|21|21': '61|24|24',//{r: 59, g: 13, b: 13},
-				'23|23|23': '59|23|23',
-				'25|25|25': '56|22|22',//{r: 59, g: 13, b: 13},
-				'28|28|28': '51|20|20',
-				'29|29|29': '51|20|20',
-				'30|30|30': '56|22|22',
-				'34|32|32': '56|39|22',
-				'32|32|32': '56|39|22',
-				'33|33|33': '54|21|21',
-				'37|37|37': '56|39|22',
-				'39|39|39': '56|39|22',
-				'40|40|40': '56|39|22',
-				'41|41|41': '56|39|22',
-				'42|42|42': '56|39|22',
-				'43|43|43': '56|39|22',
-				'48|48|48': '56|39|22',
-				'54|54|54': '56|39|22',
-				'56|56|56': '56|39|22',
-				'68|68|68': '56|39|22',
-				'69|69|69': '56|39|22',
+        // "171517":"3b1717",
+        // "171617":"3b1717",
+        // "171717":"3b1717",
+        // "191919":"381616",
+        // "202020":"382716",
+        // "252525":"382716",
+        // "383838":"381d16",
+        // "454545":"382716",
+        // "2b2b2b":"382716",
+        // "2b2b2a":"382716",
+        // "2b292b":"382716"
+        "141414":"381616",
+        "282828":"382716",
+        "323232":"381d16",
+        "3c3c3c":"382716",
+        "1e1e1e":"382716"
 			})
 		}, // 2 - Brown Cat
 		{/*walk: [27,],*/ idle: [27,], img: _imageCache['./assets/characters.png'] }, // 3 - Ninja
@@ -2891,10 +2956,12 @@ load('./assets/characters.png').then( () => {
   _allSpritesheets = _allSpritesheets.concat(
     new MySpriteSheet({ // 5 0- bullet 1
       image: recolorImage(_imageCache['./assets/characters.png'], {
-        // '56|56|56': {r: 95, g: 105, b: 2},
-        // '106|106|106': {r: 196, g: 203, b: 6},
-        '56|56|56': '95|105|2',
-        '106|106|106': '196|203|6',
+        // "000000":"5f6902",
+        // "ffffff":"c4cb06",
+        // "010000":"5f6902",
+        // "fdffff":"c4cb06"
+        "000000":"5f6902",
+        "fafafa":"c4cb06"
       }),
       frameWidth: 4,
       frameHeight: 4,
@@ -2907,7 +2974,16 @@ load('./assets/characters.png').then( () => {
       }
     }),
     new MySpriteSheet({ // 6 1- bullet 2
-      image: _imageCache['./assets/characters.png'],
+      image: recolorImage(_imageCache['./assets/characters.png'], {
+        // "000000":"ff5fff",
+        // "020000":"ff5fff",
+        // "ffffff":"ff9cec",
+        // "feffff":"ff9cec",
+        // "fffeff":"ff9cec",
+        // "000200":"ff5fff"
+        "000000":"ff5fff",
+        "fafafa":"ff9cec"
+      }),
       frameWidth: 4,
       frameHeight: 4,
       animations: {
@@ -2919,11 +2995,18 @@ load('./assets/characters.png').then( () => {
       }
     }),
     new MySpriteSheet({ // 7 2- flame
+      // image: _imageCache['./assets/characters.png'],
       image: recolorImage(_imageCache['./assets/characters.png'], {
-        // '56|56|56': {r: 103, g: 4, b: 4},
-        // '106|106|106': {r: 193, g: 16, b: 16},
-        '56|56|56': '103|4|4',
-        '106|106|106': '193|16|16',
+        // "383838":"670404",
+        // "383938":"670404",
+        // "393838":"670404",
+        // "38383a":"670404",
+        // "6a6a6a":"c11010",
+        // "383a38":"670404",
+        // "6b6a6a":"c11010",
+        // "6a6a68":"c11010"
+        "323232":"670404",
+        "646464":"c11010"
       }),
       frameWidth: 8,
       frameHeight: 8,
@@ -2949,8 +3032,11 @@ load('./assets/characters.png').then( () => {
     }),
     new MySpriteSheet({ // 9 4- lvlup
       image: recolorImage(_imageCache['./assets/characters.png'], {
-        // '255|255|255': {r: 31, g: 241, b: 183},
-        '255|255|255': '31|241|183',
+        // "ffffff":"1ff1b7",
+        // "feffff":"1ff1b7",
+        // "fdffff":"1ff1b7",
+        // "fffeff":"1ff1b7"
+        "fafafa":"1ff1b7"
       }),
       frameWidth: 16,
       frameHeight: 16,
@@ -3004,7 +3090,20 @@ load('./assets/characters.png').then( () => {
       }
     }),
     new MySpriteSheet({ // 12 2- xp egg
-      image: _imageCache['./assets/characters.png'],
+      image: recolorImage(_imageCache['./assets/characters.png'], {
+        // "383838":"3ba2ff",
+        // "393838":"3ba2ff",
+        // "000000":"3f37ff",
+        // "020000":"3f37ff",
+        // "000200":"3f37ff",
+        // "6a6a6a":"6ae4ff",
+        // "6a6a68":"6ae4ff",
+        // "686a6a":"6ae4ff",
+        // "6a6a6b":"6ae4ff"
+        "323232":"3ba2ff",
+        "646464":"6ae4ff",
+        "000000":"3f37ff"
+      }),
       // frameWidth: 4,
       frameWidth: 4,
       frameHeight: 4,
@@ -3023,14 +3122,10 @@ load('./assets/characters.png').then( () => {
     }),
     new MySpriteSheet({ // 13 3- xp bar
       image: recolorImage(_imageCache['./assets/characters.png'], {
-      // '171|60|60': {r: 60, g: 171, b: 60},
-      // '172|61|61': {r: 60, g: 171, b: 60},
-      // '172|62|62': {r: 60, g: 171, b: 60},
-      // '172|62|61': {r: 60, g: 171, b: 60},
-      '171|60|60': '59|162|255',//'60|171|60',
-      '172|61|61': '59|162|255',//'60|171|60',
-      '172|62|62': '59|162|255',//'60|171|60',
-      '172|62|61': '59|162|255',//'60|171|60',
+        // "ac3d3d":"3ba2ff",
+        // "ac3f3d":"3ba2ff",
+        // "aa3d3d":"3ba2ff"
+        "aa3c3c":"3ba2ff"
       }),
       // frameWidth: 4,
       frameWidth: 12,
@@ -3049,9 +3144,13 @@ load('./assets/characters.png').then( () => {
       }
     }),
     new MySpriteSheet({ // 14 4- magnet
+      // image: _imageCache['./assets/characters.png'],
       image: recolorImage(_imageCache['./assets/characters.png'],{
-        // '56|56|56': {r: 160, g: 48, b: 48},
-        '56|56|56': '160|48|48',
+        // "383838":"a03030",
+        // "383839":"a03030",
+        // "3a3838":"a03030",
+        // "38383a":"a03030"
+        "323232":"a03030"
       }),
       frameWidth: 4,
       frameHeight: 4,
@@ -3065,8 +3164,10 @@ load('./assets/characters.png').then( () => {
     }),
     new MySpriteSheet({ // 15 5- hiheel
       image: recolorImage(_imageCache['./assets/characters.png'],{
-        // '56|56|56': {r: 112, g: 43, b: 136},
-        '56|56|56': '112|43|136',
+        // "383838":"702b88",
+        // "393838":"702b88",
+        // "38383b":"702b88"
+        "323232":"702b88"
       }),
       frameWidth: 4,
       frameHeight: 4,
@@ -3081,24 +3182,18 @@ load('./assets/characters.png').then( () => {
     new MySpriteSheet({ // 16 6- big xp egg
       image: recolorImage(_imageCache['./assets/characters.png'],
         {
-          // '55|148|110': {r: 105, g: 55, b: 148},
-          // '106|190|48': {r: 124, g: 48, b: 190},
-          // '202|255|151': {r: 199, g: 151, b: 255},
-          // '122|233|188': {r: 181, g: 122, b: 233},
-          // '55|148|110':  '105|55|148',
-          // '106|190|48':  '124|48|190',
-          // '202|255|151': '199|151|255',
-          // '122|233|188': '181|122|233',
-          // '106|190|50': '124|48|190',
-          // '55|148|108': '105|55|148',
-          // '53|148|110': '105|55|148',
-          '106|228|255': '220|177|254',
-          '106|228|253': '220|177|254',
-          '106|229|255': '220|177|254',
-          '104|228|255': '220|177|254',
-          '63|54|255': '143|13|255',
-          '63|55|255': '143|13|255',
-          '59|162|255': '173|95|255',
+          // "383838":"ad5fff",
+          // "393838":"ad5fff",
+          // "000000":"8f0dff",
+          // "020000":"8f0dff",
+          // "000200":"8f0dff",
+          // "6a6a6a":"dcb1fe",
+          // "6a6a68":"dcb1fe",
+          // "686a6a":"dcb1fe",
+          // "6a6a6b":"dcb1fe"
+          "323232":"ad5fff",
+          "646464":"dcb1fe",
+          "000000":"8f0dff"
         }),
       // frameWidth: 4,
       frameWidth: 4,
@@ -3117,239 +3212,6 @@ load('./assets/characters.png').then( () => {
       }
     }),
   );
-
-	// _bulletSpritesheets = [
-	// 	new MySpriteSheet({ // 0- bullet 1
-	// 		image: recolorImage(_imageCache['./assets/characters.png'], {
-	// 			// '56|56|56': {r: 95, g: 105, b: 2},
-	// 			// '106|106|106': {r: 196, g: 203, b: 6},
-	// 			'56|56|56': '95|105|2',
-	// 			'106|106|106': '196|203|6',
-	// 		}),
-	// 		frameWidth: 4,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			fly: {
-	// 				frames: [24, 25,],
-	// 				frameRate: 8,
-	// 				loop: true,
-	// 			}
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ //1- bullet 2
-	// 		image: _imageCache['./assets/characters.png'],
-	// 		frameWidth: 4,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			fly: {
-	// 				frames: [36, 37, 38, 39,],
-	// 				frameRate: 8,
-	// 				loop: true,
-	// 			}
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 2- flame
-	// 		image: recolorImage(_imageCache['./assets/characters.png'], {
-	// 			// '56|56|56': {r: 103, g: 4, b: 4},
-	// 			// '106|106|106': {r: 193, g: 16, b: 16},
-	// 			'56|56|56': '103|4|4',
-	// 			'106|106|106': '193|16|16',
-	// 		}),
-	// 		frameWidth: 8,
-	// 		frameHeight: 8,
-	// 		animations: {
-	// 			fly: {
-	// 				frames: [12,13,14,15,],
-	// 				frameRate: 4,
-	// 				loop: true,
-	// 			}
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 3- explosion
-	// 		image: _imageCache['./assets/characters.png'],
-	// 		frameWidth: 16,
-	// 		frameHeight: 16,
-	// 		animations: {
-	// 			explode: {
-	// 				frames: [1,2,5,8,],
-	// 				frameRate: 8,
-	// 				loop: false,
-	// 			}
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 4- lvlup
-	// 		image: recolorImage(_imageCache['./assets/characters.png'], {
-	// 			// '255|255|255': {r: 31, g: 241, b: 183},
-	// 			'255|255|255': '31|241|183',
-	// 		}),
-	// 		frameWidth: 16,
-	// 		frameHeight: 16,
-	// 		animations: {
-	// 			explode: {
-	// 				frames: [1,2,5,8,],
-	// 				frameRate: 8,
-	// 				loop: false,
-	// 			}
-	// 		}
-	// 	}),
-	// ];
-
-	// _uiSpritesheets = [
-	// 	new MySpriteSheet({ // 0- health bar
-	// 		image: _imageCache['./assets/characters.png'],
-	// 		// frameWidth: 4,
-	// 		frameWidth: 12,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			back: {
-	// 				frames: [24,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 			fore: {
-	// 				frames: [25,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 1- grass
-	// 		image: _imageCache['./assets/characters.png'],
-	// 		// frameWidth: 4,
-	// 		frameWidth: 8,
-	// 		frameHeight: 8,
-	// 		animations: {
-	// 			variant1: {
-	// 				frames: [24,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 			variant2: {
-	// 				frames: [25,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 			variant3: {
-	// 				frames: [26,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 2- xp egg
-	// 		image: _imageCache['./assets/characters.png'],
-	// 		// frameWidth: 4,
-	// 		frameWidth: 4,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			idle: {
-	// 				frames: [84,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 			shine: {
-	// 				frames: [84,85,86,87,88,89,],
-	// 				frameRate: 6,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 3- xp bar
-	// 		image: recolorImage(_imageCache['./assets/characters.png'], {
-	// 		// '171|60|60': {r: 60, g: 171, b: 60},
-	// 		// '172|61|61': {r: 60, g: 171, b: 60},
-	// 		// '172|62|62': {r: 60, g: 171, b: 60},
-	// 		// '172|62|61': {r: 60, g: 171, b: 60},
-	// 		'171|60|60': '59|162|255',//'60|171|60',
-	// 		'172|61|61': '59|162|255',//'60|171|60',
-	// 		'172|62|62': '59|162|255',//'60|171|60',
-	// 		'172|62|61': '59|162|255',//'60|171|60',
-	// 		}),
-	// 		// frameWidth: 4,
-	// 		frameWidth: 12,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			back: {
-	// 				frames: [24,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 			fore: {
-	// 				frames: [25,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 4- magnet
-	// 		image: recolorImage(_imageCache['./assets/characters.png'],{
-	// 			// '56|56|56': {r: 160, g: 48, b: 48},
-	// 			'56|56|56': '160|48|48',
-	// 		}),
-	// 		frameWidth: 4,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			idle: {
-	// 				frames: [78,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 5- hiheel
-	// 		image: recolorImage(_imageCache['./assets/characters.png'],{
-	// 			// '56|56|56': {r: 112, g: 43, b: 136},
-	// 			'56|56|56': '112|43|136',
-	// 		}),
-	// 		frameWidth: 4,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			idle: {
-	// 				frames: [79,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// 	new MySpriteSheet({ // 6- big xp egg
-	// 		image: recolorImage(_imageCache['./assets/characters.png'],
-	// 			{
-	// 				// '55|148|110': {r: 105, g: 55, b: 148},
-	// 				// '106|190|48': {r: 124, g: 48, b: 190},
-	// 				// '202|255|151': {r: 199, g: 151, b: 255},
-	// 				// '122|233|188': {r: 181, g: 122, b: 233},
-	// 				// '55|148|110':  '105|55|148',
-	// 				// '106|190|48':  '124|48|190',
-	// 				// '202|255|151': '199|151|255',
-	// 				// '122|233|188': '181|122|233',
-	// 				// '106|190|50': '124|48|190',
-	// 				// '55|148|108': '105|55|148',
-	// 				// '53|148|110': '105|55|148',
-	// 				'106|228|255': '220|177|254',
-	// 				'106|228|253': '220|177|254',
-	// 				'106|229|255': '220|177|254',
-	// 				'104|228|255': '220|177|254',
-	// 				'63|54|255': '143|13|255',
-	// 				'63|55|255': '143|13|255',
-	// 				'59|162|255': '173|95|255',
-	// 			}),
-	// 		// frameWidth: 4,
-	// 		frameWidth: 4,
-	// 		frameHeight: 4,
-	// 		animations: {
-	// 			idle: {
-	// 				frames: [84,],
-	// 				frameRate: 1,
-	// 				loop: false,
-	// 			},
-	// 			shine: {
-	// 				frames: [84,85,86,87,88,89,],
-	// 				frameRate: 6,
-	// 				loop: false,
-	// 			},
-	// 		}
-	// 	}),
-	// ];
 
 	populateItems();
 

@@ -15,10 +15,10 @@
 
 /*! @source http://purl.eligrey.com/github/Blob.js/blob/master/Blob.js */
 
-// if (typeof Blob !== "function" || typeof URL === "undefined")
-// if (typeof Blob === "function" && typeof webkitURL !== "undefined") var URL = webkitURL;
+if (typeof Blob !== "function" || typeof URL === "undefined")
+	if (typeof Blob === "function" && typeof webkitURL !== "undefined") var URL = webkitURL;
 // else var Blob = (function (view) {
-export let Blob = (function (view) {
+	export let Blobb = Blob || (function (view) {
 	"use strict";
 
 	var BlobBuilder = view.BlobBuilder || view.WebKitBlobBuilder || view.MozBlobBuilder || view.MSBlobBuilder || (function(view) {
@@ -95,11 +95,13 @@ export let Blob = (function (view) {
 				return real_create_object_URL.call(real_URL, blob);
 			}
 		};
-		URL.revokeObjectURL = function(object_URL) {
-			if (object_URL.substring(0, 5) !== "data:" && real_revoke_object_URL) {
-				real_revoke_object_URL.call(real_URL, object_URL);
-			}
-		};
+		// ALTERED FOR SIZE
+		// URL.revokeObjectURL = function(object_URL) {
+		// 	if (object_URL.substring(0, 5) !== "data:" && real_revoke_object_URL) {
+		// 		real_revoke_object_URL.call(real_URL, object_URL);
+		// 	}
+		// };
+		// END ALTERED FOR SIZE
 		FBB_proto.append = function(data/*, endings*/) {
 			var bb = this.data;
 			// decode data to a binary string
@@ -151,17 +153,19 @@ export let Blob = (function (view) {
 		FBB_proto.toString = function() {
 			return "[object BlobBuilder]";
 		};
-		FB_proto.slice = function(start, end, type) {
-			var args = arguments.length;
-			if (args < 3) {
-				type = null;
-			}
-			return new FakeBlob(
-				  this.data.slice(start, args > 1 ? end : this.data.length)
-				, type
-				, this.encoding
-			);
-		};
+		// ALTERED FOR SIZE
+		// FB_proto.slice = function(start, end, type) {
+		// 	var args = arguments.length;
+		// 	if (args < 3) {
+		// 		type = null;
+		// 	}
+		// 	return new FakeBlob(
+		// 		  this.data.slice(start, args > 1 ? end : this.data.length)
+		// 		, type
+		// 		, this.encoding
+		// 	);
+		// };
+		// END ALTERED FOR SIZE
 		FB_proto.toString = function() {
 			return "[object Blob]";
 		};
