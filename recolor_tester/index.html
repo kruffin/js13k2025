@@ -155,9 +155,6 @@
         let curpalette = {};
         for (let pidx = 0; pidx < pixdata.data.length; pidx += 4) {
           let key = getColorKey(pixdata.data[pidx], pixdata.data[pidx+1], pixdata.data[pidx+2]);
-          // let key = '' +  pixdata.data[pidx] + '|' +
-          //                 pixdata.data[pidx+1] + '|' +
-          //                 pixdata.data[pidx+2];
           curpalette[key] = {
             r: pixdata.data[pidx], 
             g: pixdata.data[pidx+1], 
@@ -589,6 +586,7 @@
               width: 4,
               height: 4,
             }, properties));
+          this.origPal = structuredClone(this.pal);
           _colorInputs.resetBtn.addEventListener('click', this._resetPalette.bind(this, null));
           _colorInputs.setBtn.addEventListener('click', this._setPalette.bind(this));
           _colorInputs.palOverrideBtn.addEventListener('click', this._setPaletteOverride.bind(this));
@@ -600,14 +598,13 @@
           }
           let key = cell || this.selectedCell;
 
-          // let rgb = key.match(/([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/);
-          // this.pal[key].r = parseInt(rgb[1], 16);
-          // this.pal[key].g = parseInt(rgb[2], 16);
-          // this.pal[key].b = parseInt(rgb[3], 16);
-          let rgb = parseColorKey(key);
-          this.pal[key].r = rgb[0];
-          this.pal[key].g = rgb[1];
-          this.pal[key].b = rgb[2];
+          // let rgb = parseColorKey(key);
+          // this.pal[key].r = rgb[0];
+          // this.pal[key].g = rgb[1];
+          // this.pal[key].b = rgb[2];
+          this.pal[key].r = this.origPal[key].r;
+          this.pal[key].g = this.origPal[key].g;
+          this.pal[key].b = this.origPal[key].b;
 
           _colorInputs.r.value = this.pal[key].r;
           _colorInputs.g.value = this.pal[key].g;
@@ -665,14 +662,14 @@
 
         getDifferences() {
           return Object.keys(this.pal).filter( key => {
-            // let rgb = key.match(/([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/);
-            // return  parseInt(rgb[1],16) != this.pal[key].r ||
-            //         parseInt(rgb[2],16) != this.pal[key].g ||
-            //         parseInt(rgb[3],16) != this.pal[key].b;
-            let rgb = parseColorKey(key);
-            return  rgb[0] != this.pal[key].r ||
-                    rgb[1] != this.pal[key].g ||
-                    rgb[2] != this.pal[key].b;
+            // let rgb = parseColorKey(key);
+
+            // return  rgb[0] != this.pal[key].r ||
+            //         rgb[1] != this.pal[key].g ||
+            //         rgb[2] != this.pal[key].b;
+            return  this.origPal[key].r != this.pal[key].r ||
+                    this.origPal[key].g != this.pal[key].g ||
+                    this.origPal[key].b != this.pal[key].b;
           }).map( key => {
             let obj = {};
             // obj[key] = '' + this.pal[key].r + '|' + this.pal[key].g + '|' + this.pal[key].b;
